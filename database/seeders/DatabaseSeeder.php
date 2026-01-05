@@ -18,10 +18,13 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            PermissionSeeder::class,
+            RoleSeeder::class,
             UserSeeder::class,
             AlbumSeeder::class,
             OptionSeeder::class,
             PageSeeder::class,
+            MenuSeeder::class
         ]);
     }
 }

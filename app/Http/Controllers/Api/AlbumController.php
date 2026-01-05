@@ -45,6 +45,7 @@ class AlbumController extends Controller
                 'transition_in' => $request->transition_in,
                 'transition_out' => $request->transition_out,
                 'transition' => $request->transition,
+                'type' => 'sub_banner',
                 'banner_type' => $request->banner_type,
                 'user_id' => auth()->id(),
             ]);

@@ -2,33 +2,72 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::create([
-            'fname' => 'Admin',
-            'lname' => 'User',
-            'email' => 'admin@wsi.com',
-            'password' => Hash::make('password'),
-        ]);
+        /**
+         * Ensure roles exist (already seeded, but safe check)
+         */
+        $adminRole  = Role::where('name', 'admin')->where('guard_name', 'sanctum')->firstOrFail();
+        $editorRole = Role::where('name', 'editor')->where('guard_name', 'sanctum')->firstOrFail();
+        $userRole   = Role::where('name', 'user')->where('guard_name', 'sanctum')->firstOrFail();
 
-        User::create([
-            'fname' => 'John',
-            'lname' => 'Doe',
-            'email' => 'john@wsi.com',
-            'password' => Hash::make('password'),
-        ]);
+        /**
+         * --------------------
+         * ADMIN USER
+         * --------------------
+         */
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@wsi.com'],
+            [
+                'fname' => 'Admin',
+                'lname' => 'User',
+                'password' => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
 
-        User::create([
-            'fname' => 'Jane',
-            'lname' => 'Doe',
-            'email' => 'jane@wsi.com',
-            'password' => Hash::make('password'),
-        ]);
+        // ⭐ Assign ADMIN role (already has ALL permissions via RoleSeeder)
+        $admin->syncRoles([$adminRole]);
+
+        /**
+         * --------------------
+         * JOHN DOE (EDITOR)
+         * --------------------
+         */
+        $john = User::firstOrCreate(
+            ['email' => 'john@wsi.com'],
+            [
+                'fname' => 'John',
+                'lname' => 'Doe',
+                'password' => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+
+        $john->syncRoles([$editorRole]);
+
+        /**
+         * --------------------
+         * JANE DOE (USER)
+         * --------------------
+         */
+        $jane = User::firstOrCreate(
+            ['email' => 'jane@wsi.com'],
+            [
+                'fname' => 'Jane',
+                'lname' => 'Doe',
+                'password' => Hash::make('password'),
+                'is_active' => true,
+            ]
+        );
+
+        $jane->syncRoles([$userRole]);
     }
 }
