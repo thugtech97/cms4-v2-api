@@ -16,6 +16,7 @@ class RoleSeeder extends Seeder
         
         $admin = Role::firstOrCreate([
             'name' => 'admin',
+            'description' => 'Administrator',
             'guard_name' => 'sanctum',
         ]);
 
@@ -23,6 +24,7 @@ class RoleSeeder extends Seeder
 
         $editor = Role::firstOrCreate([
             'name' => 'editor',
+            'description' => 'Editor',
             'guard_name' => 'sanctum',
         ]);
 
@@ -48,6 +50,7 @@ class RoleSeeder extends Seeder
 
         $staff = Role::firstOrCreate([
             'name' => 'staff',
+            'description' => 'Staff',
             'guard_name' => 'sanctum',
         ]);
 
@@ -61,6 +64,7 @@ class RoleSeeder extends Seeder
 
         $user = Role::firstOrCreate([
             'name' => 'user',
+            'description' => 'User',
             'guard_name' => 'sanctum',
         ]);
 

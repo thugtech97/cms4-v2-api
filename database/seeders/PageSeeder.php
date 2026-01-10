@@ -164,5 +164,33 @@ class PageSeeder extends Seeder
                 'user_id' => 1,
             ]
         );
+
+        Page::updateOrCreate(
+            ['slug' => 'news'],
+            [
+                'parent_page_id' => null,
+                'album_id' => null,
+                'name' => 'News',
+                'label' => 'News',
+                'contents' => '',
+                'status' => 'published',
+                'page_type' => 'default',
+                'user_id' => 1,
+            ]
+        );
+
+        Page::updateOrCreate(
+            ['slug' => 'contact-us'],
+            [
+                'parent_page_id' => null,
+                'album_id' => null,
+                'name' => 'Contact Us',
+                'label' => 'Contact Us',
+                'contents' => '',
+                'status' => 'published',
+                'page_type' => 'default',
+                'user_id' => 1,
+            ]
+        );
     }
 }

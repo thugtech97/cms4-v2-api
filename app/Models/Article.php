@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class Article extends Model
+class Article extends Model implements AuditableContract
 {
-    use SoftDeletes;
+    use SoftDeletes, Auditable;
 
     protected $fillable = [
         'category_id',
@@ -34,6 +36,8 @@ class Article extends Model
         'json' => 'array',
     ];
 
+    protected $appends = ['updated_at_formatted'];
+
     // 🔗 Relationships
     public function category()
     {
@@ -44,4 +48,12 @@ class Article extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function getUpdatedAtFormattedAttribute()
+    {
+        return $this->updated_at
+            ? $this->updated_at->format('M d, Y g:i A')
+            : null;
+    }
+
 }

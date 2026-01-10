@@ -14,9 +14,12 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Page\PageController;
 use App\Http\Controllers\Api\AuditTrailController;
+use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\FileManagerController;
+use App\Http\Controllers\Api\WebsiteSettingController;
 use App\Http\Controllers\Api\ArticleCategoryController;
 use App\Http\Controllers\Api\Page\PublicPageController;
+use App\Http\Controllers\Api\PermissionMatrixController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -76,9 +79,39 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // audit
     Route::get('/audit-trails', [AuditTrailController::class, 'index']);
+
+    // website settings
+    Route::get('/website-settings', [WebsiteSettingController::class, 'show']);
+
+    Route::post('/website-settings/website', [WebsiteSettingController::class, 'updateWebsite']);
+    Route::post('/website-settings/contact', [WebsiteSettingController::class, 'updateContact']);
+    Route::post('/website-settings/privacy', [WebsiteSettingController::class, 'updatePrivacy']);
+
+    Route::get('/website-settings/social', [WebsiteSettingController::class, 'getSocials']);
+    Route::post('/website-settings/social', [WebsiteSettingController::class, 'updateSocials']);
+
+    // roles
+    Route::get('/roles', [RoleController::class, 'index']);
+    Route::post('/roles', [RoleController::class, 'store']);
+    Route::put('/roles/{role}', [RoleController::class, 'update']);
+
+    // access right
+    Route::get('/permissions/matrix', [PermissionMatrixController::class, 'index']);
+    Route::post('/permissions/sync', [PermissionMatrixController::class, 'sync']);
+
+    // ai assistant
+    Route::post('/ai/page-assistant', [AiAssistantController::class, 'generate']);
+
 });
 
 //public
 Route::get('/public/pages/{slug}', [PublicPageController::class, 'show']);
 Route::get('/public/menus/active', [PublicPageController::class, 'active']);
 Route::get('/public/footer', [PublicPageController::class, 'footer']);
+
+Route::prefix('public-articles')->group(function () {
+    Route::get('/', [PublicPageController::class, 'public_articles']);
+    Route::get('/{slug}', [PublicPageController::class, 'public_articles_show']);
+});
+Route::get('/public-article-categories', [PublicPageController::class, 'public_article_categories']);
+Route::get('/public-articles-archive', [PublicPageController::class, 'archive']);

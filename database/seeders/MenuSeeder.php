@@ -25,6 +25,16 @@ class MenuSeeder extends Seeder
                         'label' => 'About',
                         'children' => [],
                     ],
+                    [
+                        'id' => 4,
+                        'label' => 'News',
+                        'children' => [],
+                    ],
+                    [
+                        'id' => 5,
+                        'label' => 'Contact Us',
+                        'children' => [],
+                    ],
                 ]),
                 'is_active' => 1,
                 'created_at' => Carbon::now(),
