@@ -82,16 +82,17 @@ class PublicPageController extends Controller
         ]);
     }
 
-    private function normalizeItems(array $items)
+    private function normalizeItems(array $items): array
     {
         return collect($items)->map(function ($item) {
             return [
-                'id' => $item['id'] ?? null,
-                'title' => $item['label'],
-                'slug' => Str::slug($item['label']),
+                'id' => $item['id'],
+                'label' => $item['label'],
+                'type' => $item['type'],
+                'target' => $item['target'],
                 'children' => $this->normalizeItems($item['children'] ?? []),
             ];
-        })->values();
+        })->values()->all();
     }
 
     public function footer()

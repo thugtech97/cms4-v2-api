@@ -103,10 +103,11 @@ class PageController extends Controller
     public function pages_menu()
     {
         return response()->json([
-            'data' => Page::select('id', 'name', 'label')
+            'data' => Page::select('id', 'name', 'label', 'slug')
                 ->where('status', 'published')
                 ->orderBy('id')
                 ->get()
         ]);
     }
+
 }
