@@ -106,11 +106,30 @@ class AlbumController extends Controller
             if ($image instanceof UploadedFile) {
                 if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
                     Storage::disk('public')->delete($banner->image_path);
-                
+
                 }
                 $path = $image->store('banners', 'public');
                 $banner->update(['image_path' => $path]);
             }
         }
+    }
+
+    public function destroy(Album $album)
+    {
+        return DB::transaction(function () use ($album) {
+            $banners = $album->banners()->get();
+
+            foreach ($banners as $banner) {
+                if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
+                    Storage::disk('public')->delete($banner->image_path);
+                }
+
+                $banner->delete();
+            }
+
+            $album->delete();
+
+            return response()->json(null, 204);
+        });
     }
 }
