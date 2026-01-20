@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Page\PageController;
 use App\Http\Controllers\Api\AuditTrailController;
 use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\FileManagerController;
+use App\Http\Controllers\Api\LayoutPresetController;
 use App\Http\Controllers\Api\WebsiteSettingController;
 use App\Http\Controllers\Api\ArticleCategoryController;
 use App\Http\Controllers\Api\Page\PublicPageController;
@@ -101,6 +102,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ai assistant
     Route::post('/ai/page-assistant', [AiAssistantController::class, 'generate']);
+
+    // layout presets
+    Route::prefix('layout-presets')->group(function () {
+        Route::get('/', [LayoutPresetController::class, 'index']);
+        Route::post('/', [LayoutPresetController::class, 'store']);
+        Route::put('/{id}', [LayoutPresetController::class, 'update']);
+        Route::delete('/{id}', [LayoutPresetController::class, 'destroy']);
+    });
 
 });
 
