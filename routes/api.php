@@ -52,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // menus
     Route::apiResource('menus', MenuController::class);
     Route::patch('/menus/{menu}/activate', [MenuController::class, 'setActive']);
+    Route::post('/menus/restore', [MenuController::class, 'restore']);
+    Route::post('/menus/{id}/restore', [MenuController::class, 'restoreById']);
 
     // file manager
     Route::prefix('filemanager')->group(function () {
@@ -73,6 +75,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/articles', [ArticleController::class, 'store']);
     Route::get('/articles/{article}', [ArticleController::class, 'show']);
     Route::post('/articles/{article}', [ArticleController::class, 'update']);
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
+    Route::post('/articles/restore', [ArticleController::class, 'restore']);
+    Route::post('/articles/{id}/restore', [ArticleController::class, 'restoreById']);
 
     // users
     Route::post('/users', [UserController::class, 'store']);

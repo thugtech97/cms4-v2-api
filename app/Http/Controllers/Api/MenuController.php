@@ -13,12 +13,36 @@ class MenuController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
 
-        $menus = Menu::query()
-            ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            })
-            ->latest()
-            ->paginate($perPage);
+        $query = Menu::query();
+
+        $onlyTrashed = $request->boolean('only_trashed')
+            || $request->boolean('onlyDeleted')
+            || $request->boolean('trashed')
+            || $request->boolean('show_deleted');
+
+        $withTrashed = $request->boolean('with_trashed')
+            || $request->boolean('withDeleted')
+            || $request->boolean('include_deleted');
+
+        if ($onlyTrashed) {
+            $query = $query->onlyTrashed();
+        } elseif ($withTrashed) {
+            $query = $query->withTrashed();
+        }
+
+        $query->when($request->search, function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%');
+        });
+
+        $menus = $query->latest()->paginate($perPage);
+
+        // Add helper flags for frontend to detect deleted rows
+        $menus->getCollection()->transform(function ($m) {
+            $mArr = $m->toArray();
+            $mArr['is_deleted'] = !empty($m->deleted_at);
+            $mArr['visibility'] = $mArr['visibility'] ?? null;
+            return $mArr;
+        });
 
         return response()->json($menus);
     }
@@ -64,11 +88,56 @@ class MenuController extends Controller
 
     public function destroy(Menu $menu)
     {
+        // set inactive so UI indicates deletion immediately
+        try {
+            $menu->update(['is_active' => false]);
+        } catch (\Exception $e) {
+            // ignore
+        }
+
         $menu->delete();
 
         return response()->json([
             'message' => 'Menu deleted'
         ]);
+    }
+
+    public function restore(Request $request)
+    {
+        $ids = $request->input('ids') ?? $request->input('id');
+
+        if (is_null($ids)) {
+            return response()->json(['message' => 'No id(s) provided'], 422);
+        }
+
+        $ids = is_array($ids) ? $ids : [$ids];
+
+        $menus = Menu::withTrashed()->whereIn('id', $ids)->get();
+        $restored = 0;
+
+        foreach ($menus as $m) {
+            if ($m->trashed()) {
+                $m->restore();
+                try { $m->update(['is_active' => true]); } catch (\Exception $e) {}
+                $restored++;
+            }
+        }
+
+        return response()->json(['message' => 'Menus restored', 'restored_count' => $restored]);
+    }
+
+    public function restoreById($id)
+    {
+        $menu = Menu::withTrashed()->findOrFail($id);
+
+        if (! $menu->trashed()) {
+            return response()->json(['message' => 'Menu is not deleted'], 422);
+        }
+
+        $menu->restore();
+        try { $menu->update(['is_active' => true]); } catch (\Exception $e) {}
+
+        return response()->json(['message' => 'Menu restored', 'id' => $menu->id]);
     }
 
     public function setActive(Menu $menu)

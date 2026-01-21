@@ -17,13 +17,58 @@ class ArticleController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
 
-        $articles = Article::query()
-            ->with('category:id,name') // relation required
-            ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            })
-            ->latest('updated_at')
-            ->paginate($perPage);
+        $query = Article::query()->with('category:id,name');
+
+        // trashed params acceptance
+        $onlyTrashed = $request->boolean('only_trashed')
+            || $request->boolean('onlyDeleted')
+            || $request->boolean('trashed')
+            || $request->boolean('show_deleted');
+
+        $withTrashed = $request->boolean('with_trashed')
+            || $request->boolean('withDeleted')
+            || $request->boolean('include_deleted');
+
+        if ($onlyTrashed) {
+            $query = $query->onlyTrashed();
+        } elseif ($withTrashed) {
+            $query = $query->withTrashed();
+        }
+
+        // filters
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->input('category_id'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('is_featured')) {
+            $query->where('is_featured', $request->boolean('is_featured'));
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->input('date_to'));
+        }
+
+        $query->when($request->search, function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%');
+        });
+
+        $articles = $query->latest('updated_at')->paginate($perPage);
+
+        // Add helpful flags so frontend can highlight deleted rows like pages
+        $articles->getCollection()->transform(function ($a) {
+            $aArray = $a->toArray();
+            $aArray['is_deleted'] = !empty($a->deleted_at) || ($a->status === 'deleted') || (isset($a->visibility) && strtolower($a->visibility) === 'deleted');
+            $aArray['visibility'] = $a->visibility ?? null;
+            return $aArray;
+        });
 
         return response()->json($articles);
     }
@@ -156,5 +201,62 @@ class ArticleController extends Controller
         return response()->json([
             'data' => ArticleCategory::orderBy('name')->get()
         ]);
+    }
+
+    public function destroy(Article $article)
+    {
+        // mark as deleted for frontend compatibility
+        try {
+            $article->update(['status' => 'deleted']);
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        $article->delete();
+
+        return response()->json(['message' => 'Article deleted']);
+    }
+
+    public function restore(Request $request)
+    {
+        $ids = $request->input('ids') ?? $request->input('id');
+
+        if (is_null($ids)) {
+            return response()->json(['message' => 'No id(s) provided'], 422);
+        }
+
+        $ids = is_array($ids) ? $ids : [$ids];
+
+        $articles = Article::withTrashed()->whereIn('id', $ids)->get();
+        $restored = 0;
+
+        foreach ($articles as $art) {
+            if ($art->trashed()) {
+                $art->restore();
+                if ($art->status === 'deleted') {
+                    try { $art->update(['status' => 'draft']); } catch (\Exception $e) {}
+                }
+                $restored++;
+            }
+        }
+
+        return response()->json(['message' => 'Articles restored', 'restored_count' => $restored]);
+    }
+
+    public function restoreById($id)
+    {
+        $article = Article::withTrashed()->findOrFail($id);
+
+        if (! $article->trashed()) {
+            return response()->json(['message' => 'Article is not deleted'], 422);
+        }
+
+        $article->restore();
+
+        if ($article->status === 'deleted') {
+            try { $article->update(['status' => 'draft']); } catch (\Exception $e) {}
+        }
+
+        return response()->json(['message' => 'Article restored', 'id' => $article->id]);
     }
 }
