@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/profile', [AccountController::class, 'updateProfile']);
     Route::put('/user/email', [AccountController::class, 'updateEmail']);
     Route::put('/user/password', [AccountController::class, 'updatePassword']);
-    
+
     // dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
@@ -38,6 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pages', [PageController::class, 'store']);
     Route::get('/pages/{id}', [PageController::class, 'show']);
     Route::put('/pages/{id}', [PageController::class, 'update']);
+    Route::patch('/pages/{id}', [PageController::class, 'update']);
+    Route::delete('/pages/{id}', [PageController::class, 'destroy']);
+    Route::post('/pages/restore', [PageController::class, 'restore']);
     Route::get('/pages-menu', [PageController::class, 'pages_menu']);
 
     // albums

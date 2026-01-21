@@ -51,7 +51,25 @@ class PageController extends Controller
     {
         $perPage = $request->integer('per_page', 10);
 
-        $pages = Page::query()
+        $query = Page::query();
+
+        // Accept multiple possible query param names sent by the frontend toggle
+        $onlyTrashed = $request->boolean('only_trashed')
+            || $request->boolean('onlyDeleted')
+            || $request->boolean('trashed')
+            || $request->boolean('show_deleted');
+
+        $withTrashed = $request->boolean('with_trashed')
+            || $request->boolean('withDeleted')
+            || $request->boolean('include_deleted');
+
+        if ($onlyTrashed) {
+            $query = $query->onlyTrashed();
+        } elseif ($withTrashed) {
+            $query = $query->withTrashed();
+        }
+
+        $pages = $query
             ->when($request->search, function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             })
@@ -83,15 +101,19 @@ class PageController extends Controller
         $page = Page::findOrFail($id);
 
         $validated = $request->validate([
-            'name' => 'required|string',
-            'label' => 'nullable|string',
-            'album_id' => 'nullable',
-            'contents' => 'required|string',
-            'status' => 'required|in:published,private',
-            'meta_title' => 'nullable|string',
-            'meta_description' => 'nullable|string',
-            'meta_keyword' => 'nullable|string',
+            'name' => 'sometimes|required|string',
+            'label' => 'sometimes|nullable|string',
+            'album_id' => 'sometimes|nullable|exists:albums,id',
+            'contents' => 'sometimes|required|string',
+            'status' => 'sometimes|required|in:published,private',
+            'meta_title' => 'sometimes|nullable|string',
+            'meta_description' => 'sometimes|nullable|string',
+            'meta_keyword' => 'sometimes|nullable|string',
         ]);
+
+        if (array_key_exists('name', $validated)) {
+            $validated['slug'] = Str::slug($validated['name']);
+        }
 
         $page->update($validated);
 
@@ -107,6 +129,62 @@ class PageController extends Controller
                 ->where('status', 'published')
                 ->orderBy('id')
                 ->get()
+        ]);
+    }
+
+    public function destroy(int $id)
+    {
+        $page = Page::findOrFail($id);
+
+        // Ensure frontend recognizes this as deleted by setting status
+        try {
+            $page->update(['status' => 'deleted']);
+        } catch (\Exception $e) {
+            // ignore if update fails for unexpected reasons
+        }
+
+        // Soft delete (Page uses SoftDeletes). If you want hard delete, use forceDelete().
+        $page->delete();
+
+        return response()->json([
+            'message' => 'Page deleted'
+        ]);
+    }
+
+    public function restore(Request $request)
+    {
+        $ids = $request->input('ids') ?? $request->input('id');
+
+        if (is_null($ids)) {
+            return response()->json(['message' => 'No id(s) provided'], 422);
+        }
+
+        $ids = is_array($ids) ? $ids : [$ids];
+
+        $pages = Page::withTrashed()->whereIn('id', $ids)->get();
+
+        $restoredCount = 0;
+
+        foreach ($pages as $p) {
+            if ($p->trashed()) {
+                $p->restore();
+
+                // If status was 'deleted', move it back to 'draft' so it no longer appears as deleted
+                if ($p->status === 'deleted') {
+                    try {
+                        $p->update(['status' => 'draft']);
+                    } catch (\Exception $e) {
+                        // ignore update failures
+                    }
+                }
+
+                $restoredCount++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Pages restored',
+            'restored_count' => $restoredCount
         ]);
     }
 
