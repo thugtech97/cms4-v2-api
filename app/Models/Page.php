@@ -30,30 +30,22 @@ class Page extends Model implements AuditableContract
         'user_id',
         'template',
     ];
-
-    /* =====================
-     | Relationships
-     ===================== */
-
-    // Parent page
+    
     public function parent()
     {
         return $this->belongsTo(Page::class, 'parent_page_id');
     }
 
-    // Child pages
     public function children()
     {
         return $this->hasMany(Page::class, 'parent_page_id');
     }
 
-    // Album (for banners / sliders)
     public function album()
     {
         return $this->belongsTo(Album::class);
     }
 
-    // Owner
     public function user()
     {
         return $this->belongsTo(User::class);
