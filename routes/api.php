@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\AlbumController;
 use App\Http\Controllers\Api\OptionController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\ArticleController;
+use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Page\PageController;
@@ -69,6 +72,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/article-categories/{category}', [ArticleCategoryController::class, 'show']);
     Route::put('/article-categories/{category}', [ArticleCategoryController::class, 'update']);
 
+    // Compatibility endpoint used by some frontends
+    // e.g. GET /api/categories?type=product
+    Route::get('/categories', function (Request $request) {
+        $type = $request->input('type');
+
+        if ($type === 'product') {
+            return app(ProductCategoryController::class)->index($request);
+        }
+
+        if ($type === 'article') {
+            return app(ArticleCategoryController::class)->index($request);
+        }
+
+        return response()->json([
+            'message' => 'Unknown category type',
+            'allowed' => ['product', 'article'],
+        ], 404);
+    });
+
     // articles
     Route::get('/articles', [ArticleController::class, 'index']);
     Route::get('/fetch-article-categories', [ArticleController::class, 'fetch_categories']);
@@ -78,6 +100,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
     Route::post('/articles/restore', [ArticleController::class, 'restore']);
     Route::post('/articles/{id}/restore', [ArticleController::class, 'restoreById']);
+
+    // products
+    Route::get('/product-categories', [ProductCategoryController::class, 'index']);
+    Route::get('/fetch-product-categories', [ProductCategoryController::class, 'index']);
+    Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::get('/products/{product}', [ProductController::class, 'show']);
+    Route::put('/products/{product}', [ProductController::class, 'update']);
+    Route::patch('/products/{product}', [ProductController::class, 'update']);
+    Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+    Route::post('/products/restore', [ProductController::class, 'restore']);
+    Route::post('/products/{id}/restore', [ProductController::class, 'restoreById']);
 
     // users
     Route::post('/users', [UserController::class, 'store']);
@@ -125,6 +161,15 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/public/pages/{slug}', [PublicPageController::class, 'show']);
 Route::get('/public/menus/active', [PublicPageController::class, 'active']);
 Route::get('/public/footer', [PublicPageController::class, 'footer']);
+
+// Public search routes
+// Back-compat aliases for frontend helpers expecting /search and /public/search
+Route::get('/search', [SearchController::class, 'quickSearch']);
+Route::get('/public/search', [SearchController::class, 'quickSearch']);
+
+Route::get('/search/pages', [SearchController::class, 'searchPages']);
+Route::get('/search/global', [SearchController::class, 'globalSearch']);
+Route::get('/search/quick', [SearchController::class, 'quickSearch']);
 
 Route::prefix('public-articles')->group(function () {
     Route::get('/', [PublicPageController::class, 'public_articles']);

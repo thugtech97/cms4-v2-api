@@ -71,7 +71,16 @@ class PageController extends Controller
 
         $pages = $query
             ->when($request->search, function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
+                $term = $request->search;
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('name', 'like', '%' . $term . '%')
+                        ->orWhere('label', 'like', '%' . $term . '%')
+                        ->orWhere('slug', 'like', '%' . $term . '%')
+                        ->orWhere('contents', 'like', '%' . $term . '%')
+                        ->orWhere('meta_title', 'like', '%' . $term . '%')
+                        ->orWhere('meta_description', 'like', '%' . $term . '%')
+                        ->orWhere('meta_keyword', 'like', '%' . $term . '%');
+                });
             })
             ->latest('updated_at')
             ->paginate($perPage);
