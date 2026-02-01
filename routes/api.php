@@ -177,3 +177,5 @@ Route::prefix('public-articles')->group(function () {
 });
 Route::get('/public-article-categories', [PublicPageController::class, 'public_article_categories']);
 Route::get('/public-articles-archive', [PublicPageController::class, 'archive']);
+
+Route::post('/contact', [PublicPageController::class, 'send']);

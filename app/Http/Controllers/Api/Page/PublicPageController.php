@@ -8,7 +8,9 @@ use App\Models\Page;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use App\Models\ArticleCategory;
+use App\Mail\ContactMessageMail;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class PublicPageController extends Controller
@@ -141,6 +143,14 @@ class PublicPageController extends Controller
             $query->where('is_featured', true);
         }
 
+        if ($request->filled('year')) {
+            $query->whereYear('date', $request->year);
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('date', $request->month);
+        }
+
         $articles = $query->paginate(
             $request->get('per_page', 10)
         );
@@ -193,5 +203,24 @@ class PublicPageController extends Controller
         }
 
         return response()->json($archive);
+    }
+
+    public function send(Request $request)
+    {
+        $data = $request->validate([
+            'inquiry_type'   => 'required|string',
+            'first_name'     => 'required|string|max:100',
+            'last_name'      => 'required|string|max:100',
+            'email'          => 'required|email',
+            'contact_number' => 'required|string|max:30',
+            'message'        => 'required|string|max:2000',
+        ]);
+
+        Mail::to(config('mail.from.address'))
+            ->send(new ContactMessageMail($data));
+
+        return response()->json([
+            'message' => 'Message sent successfully'
+        ]);
     }
 }
