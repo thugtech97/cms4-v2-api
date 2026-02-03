@@ -105,6 +105,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/product-categories', [ProductCategoryController::class, 'index']);
     Route::get('/fetch-product-categories', [ProductCategoryController::class, 'index']);
     Route::post('/product-categories', [ProductCategoryController::class, 'store']);
+    Route::get('/product-categories/{category}', [ProductCategoryController::class, 'show']);
+    Route::put('/product-categories/{category}', [ProductCategoryController::class, 'update']);
+    Route::patch('/product-categories/{category}', [ProductCategoryController::class, 'update']);
+    Route::delete('/product-categories/{category}', [ProductCategoryController::class, 'destroy']);
+    Route::post('/product-categories/restore', [ProductCategoryController::class, 'restore']);
+    Route::post('/product-categories/{id}/restore', [ProductCategoryController::class, 'restoreById']);
 
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
