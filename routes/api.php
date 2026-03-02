@@ -100,6 +100,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/articles/{article}', [ArticleController::class, 'destroy']);
     Route::post('/articles/restore', [ArticleController::class, 'restore']);
     Route::post('/articles/{id}/restore', [ArticleController::class, 'restoreById']);
+    Route::post('/articles/{article}/duplicate', [ArticleController::class, 'duplicate']);
 
     // products
     Route::get('/product-categories', [ProductCategoryController::class, 'index']);

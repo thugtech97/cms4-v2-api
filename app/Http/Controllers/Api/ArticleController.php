@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\ArticleCategory;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Api\ArticleController;
+use Illuminate\Support\Facades\DB;
 
 class ArticleController extends Controller
 {
@@ -258,5 +258,61 @@ class ArticleController extends Controller
         }
 
         return response()->json(['message' => 'Article restored', 'id' => $article->id]);
+    }
+
+    public function duplicate(Request $request, Article $article)
+    {
+        $copyMedia = $request->boolean('copy_media', true);
+
+        return DB::transaction(function () use ($request, $article, $copyMedia) {
+            $clone = $article->replicate();
+
+            $clone->name = $article->name . ' (Copy)';
+
+            // ensure unique slug
+            $baseSlug = Str::slug($clone->name);
+            $slug = $baseSlug;
+            $i = 1;
+            while (Article::where('slug', $slug)->withTrashed()->exists()) {
+                $slug = $baseSlug . '-' . $i++;
+            }
+            $clone->slug = $slug;
+
+            $clone->status = 'draft';
+            $clone->user_id = $request->user() ? $request->user()->id : $article->user_id;
+            $clone->deleted_at = null;
+
+            // handle media copying
+            if ($copyMedia) {
+                if (!empty($article->image_url) && Storage::disk('public')->exists($article->image_url)) {
+                    $ext = pathinfo($article->image_url, PATHINFO_EXTENSION);
+                    $dest = 'articles/banners/' . time() . '_' . uniqid() . ($ext ? '.' . $ext : '');
+                    Storage::disk('public')->copy($article->image_url, $dest);
+                    $clone->image_url = $dest;
+                } else {
+                    $clone->image_url = null;
+                }
+
+                if (!empty($article->thumbnail_url) && Storage::disk('public')->exists($article->thumbnail_url)) {
+                    $ext = pathinfo($article->thumbnail_url, PATHINFO_EXTENSION);
+                    $dest = 'articles/thumbnails/' . time() . '_' . uniqid() . ($ext ? '.' . $ext : '');
+                    Storage::disk('public')->copy($article->thumbnail_url, $dest);
+                    $clone->thumbnail_url = $dest;
+                } else {
+                    $clone->thumbnail_url = null;
+                }
+            } else {
+                // don't duplicate files; keep URLs so frontend can decide
+                $clone->image_url = $article->image_url;
+                $clone->thumbnail_url = $article->thumbnail_url;
+            }
+
+            $clone->save();
+
+            return response()->json([
+                'message' => 'Article duplicated',
+                'data' => $clone,
+            ], 201);
+        });
     }
 }
