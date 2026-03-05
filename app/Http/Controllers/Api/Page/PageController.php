@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PageResource;
+use App\Services\GrapesParser;
 
 class PageController extends Controller
 {
@@ -23,7 +24,22 @@ class PageController extends Controller
             'meta_description'  => 'nullable|string',
             'meta_keyword'      => 'nullable|string',
             'template'          => 'nullable|string|max:255',
+            'content_type'      => 'nullable|in:tiny,grapes',
+            'grapes_html'       => 'nullable|string',
+            'grapes_css'        => 'nullable|string',
+            'grapes_js'         => 'nullable|string',
+            'grapes_payload'    => 'sometimes|nullable|string',
         ]);
+
+        // If frontend sent a single grapes payload (JSON or HTML), parse it
+        if (($validated['content_type'] ?? null) === 'grapes'
+            && empty($validated['grapes_html'])
+            && ! empty($validated['grapes_payload'] ?? null)) {
+            $parts = GrapesParser::parse($validated['grapes_payload']);
+            $validated['grapes_html'] = $parts['grapes_html'];
+            $validated['grapes_css'] = $parts['grapes_css'];
+            $validated['grapes_js'] = $parts['grapes_js'];
+        }
 
         $page = Page::create([
             'name'             => $validated['name'],
@@ -37,6 +53,10 @@ class PageController extends Controller
             'meta_description' => $validated['meta_description'] ?? null,
             'meta_keyword'     => $validated['meta_keyword'] ?? null,
             'template'         => $validated['template'] ?? null,
+            'content_type'     => $validated['content_type'] ?? 'tiny',
+            'grapes_html'      => $validated['grapes_html'] ?? null,
+            'grapes_css'       => $validated['grapes_css'] ?? null,
+            'grapes_js'        => $validated['grapes_js'] ?? null,
             'user_id'          => auth()->id(),
         ]);
 
@@ -98,6 +118,10 @@ class PageController extends Controller
             'label' => $page->label,
             'album_id' => $page->album_id, // ✅ ADD THIS
             'contents' => $page->contents,
+            'content_type' => $page->content_type,
+            'grapes_html' => $page->grapes_html,
+            'grapes_css' => $page->grapes_css,
+            'grapes_js' => $page->grapes_js,
             'status' => $page->status,
             'meta_title' => $page->meta_title,
             'meta_description' => $page->meta_description,
@@ -114,6 +138,11 @@ class PageController extends Controller
             'label' => 'sometimes|nullable|string',
             'album_id' => 'sometimes|nullable|exists:albums,id',
             'contents' => 'sometimes|required|string',
+            'content_type' => 'sometimes|in:tiny,grapes',
+            'grapes_html' => 'sometimes|nullable|string',
+            'grapes_css' => 'sometimes|nullable|string',
+            'grapes_js' => 'sometimes|nullable|string',
+            'grapes_payload' => 'sometimes|nullable|string',
             'status' => 'sometimes|required|in:published,private',
             'meta_title' => 'sometimes|nullable|string',
             'meta_description' => 'sometimes|nullable|string',
@@ -122,6 +151,16 @@ class PageController extends Controller
 
         if (array_key_exists('name', $validated)) {
             $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        // Parse grapes_payload into fields when update payload uses grapes export
+        if (($validated['content_type'] ?? null) === 'grapes'
+            && empty($validated['grapes_html'] ?? null)
+            && ! empty($validated['grapes_payload'] ?? null)) {
+            $parts = GrapesParser::parse($validated['grapes_payload']);
+            $validated['grapes_html'] = $parts['grapes_html'];
+            $validated['grapes_css'] = $parts['grapes_css'];
+            $validated['grapes_js'] = $parts['grapes_js'];
         }
 
         $page->update($validated);

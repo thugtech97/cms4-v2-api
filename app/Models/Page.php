@@ -29,8 +29,12 @@ class Page extends Model implements AuditableContract
         'meta_description',
         'user_id',
         'template',
+        'grapes_html',
+        'grapes_css',
+        'grapes_js',
+        'content_type',
     ];
-    
+
     public function parent()
     {
         return $this->belongsTo(Page::class, 'parent_page_id');
