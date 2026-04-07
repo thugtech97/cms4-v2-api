@@ -38,7 +38,7 @@ return [
      *
      * null - auto select the first disk in the disk list
      */
-    'leftDisk'          => null,
+    'leftDisk'          => 'public',
 
     /**
      * Default disk for right manager
@@ -95,7 +95,7 @@ return [
      * Add your middleware name to array -> ['web', 'auth', 'admin']
      * !!!! RESTRICT ACCESS FOR NON ADMIN USERS !!!!
      */
-    'middleware'        => ['web'],
+    'middleware' => ['api'],
 
     /***************************************************************************
      * ACL mechanism ON/OFF

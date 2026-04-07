@@ -18,7 +18,6 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Page\PageController;
 use App\Http\Controllers\Api\AuditTrailController;
 use App\Http\Controllers\Api\AiAssistantController;
-use App\Http\Controllers\Api\FileManagerController;
 use App\Http\Controllers\Api\LayoutPresetController;
 use App\Http\Controllers\Api\WebsiteSettingController;
 use App\Http\Controllers\Api\ArticleCategoryController;
@@ -57,14 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/menus/{menu}/activate', [MenuController::class, 'setActive']);
     Route::post('/menus/restore', [MenuController::class, 'restore']);
     Route::post('/menus/{id}/restore', [MenuController::class, 'restoreById']);
-
-    // file manager
-    Route::prefix('filemanager')->group(function () {
-        Route::get('/', [FileManagerController::class, 'index']);
-        Route::post('/upload', [FileManagerController::class, 'upload']);
-        Route::post('/folder', [FileManagerController::class, 'createFolder']);
-        Route::delete('/', [FileManagerController::class, 'delete']);
-    });
 
     // article categories
     Route::get('/article-categories', [ArticleCategoryController::class, 'index']);
