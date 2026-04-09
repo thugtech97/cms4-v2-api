@@ -53,6 +53,7 @@ class Setting extends Model implements AuditableContract
         'modal_title',
         'modal_content',
         'modal_status',
+        'nav_alignment',
     ];
 
     protected $casts = [

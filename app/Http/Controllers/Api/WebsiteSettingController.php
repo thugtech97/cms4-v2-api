@@ -41,6 +41,7 @@ class WebsiteSettingController extends Controller
             'copyright' => 'required|string|max:150',
             'company_logo' => 'nullable|image',
             'website_favicon' => 'nullable|image',
+            'nav_alignment' => 'nullable|in:left,center,right',
         ]);
 
         $setting = $this->setting();
@@ -68,6 +69,7 @@ class WebsiteSettingController extends Controller
             'google_analytics',
             'google_map',
             'google_recaptcha_sitekey',
+            'nav_alignment',
         ]));
 
         return response()->json(['message' => 'Website settings updated']);
