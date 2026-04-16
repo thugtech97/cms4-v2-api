@@ -60,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // article categories
     Route::get('/article-categories', [ArticleCategoryController::class, 'index']);
     Route::post('/article-categories', [ArticleCategoryController::class, 'store']);
+    Route::post('/article-categories/delete', [ArticleCategoryController::class, 'delete']);
+    Route::post('/article-categories/restore', [ArticleCategoryController::class, 'restore']);
+    Route::post('/article-categories/{id}/restore', [ArticleCategoryController::class, 'restoreById']);
     Route::get('/article-categories/{category}', [ArticleCategoryController::class, 'show']);
     Route::put('/article-categories/{category}', [ArticleCategoryController::class, 'update']);
 
