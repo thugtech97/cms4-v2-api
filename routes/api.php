@@ -151,6 +151,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [LayoutPresetController::class, 'store']);
         Route::put('/{id}', [LayoutPresetController::class, 'update']);
         Route::delete('/{id}', [LayoutPresetController::class, 'destroy']);
+        Route::post('/restore', [LayoutPresetController::class, 'restore']);
+        Route::post('/{id}/restore', [LayoutPresetController::class, 'restoreById']);
     });
 
 });
