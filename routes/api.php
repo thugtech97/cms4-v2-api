@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::put('/products/{product}', [ProductController::class, 'update']);
     Route::patch('/products/{product}', [ProductController::class, 'update']);
+    Route::post('/products/{product}', [ProductController::class, 'update']); // ← multipart _method=PUT spoof
     Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     Route::post('/products/restore', [ProductController::class, 'restore']);
     Route::post('/products/{id}/restore', [ProductController::class, 'restoreById']);

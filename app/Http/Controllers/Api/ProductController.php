@@ -153,30 +153,35 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        // PHP can't parse multipart on PUT — accept POST + _method=PUT spoof
+        if ($request->isMethod('POST') && $request->input('_method') === 'PUT') {
+            $request->setMethod('PUT');
+        }
+
         $validated = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'price' => ['nullable', 'numeric'],
+            'name'        => ['sometimes', 'required', 'string', 'max:255'],
+            'price'       => ['nullable', 'numeric'],
             'description' => ['nullable', 'string'],
-
-            'category' => ['nullable'],
+            'category'    => ['nullable'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
-
-            'image' => ['nullable', 'image', 'max:4096'],
-            'status' => ['nullable', 'string'],
+            'image'       => ['nullable', 'image', 'max:4096'],
+            'status'      => ['nullable', 'string'],
         ]);
 
         $updates = [
-            'price' => $validated['price'] ?? $product->price,
-            'description' => array_key_exists('description', $validated) ? ($validated['description'] ?? null) : $product->description,
-            'status' => $validated['status'] ?? $product->status,
+            'price'       => $validated['price'] ?? $product->price,
+            'description' => array_key_exists('description', $validated)
+                ? ($validated['description'] ?? null)
+                : $product->description,
+            'status'      => $validated['status'] ?? $product->status,
         ];
 
         if (array_key_exists('name', $validated)) {
             $updates['name'] = $validated['name'];
-            $updates['slug'] = $this->uniqueProductSlug(Str::slug($validated['name']));
+            $updates['slug'] = $this->uniqueProductSlug(Str::slug($validated['name']), $product->id);
         }
 
-        // Category resolution (same logic as store)
+        // Category resolution
         if (!empty($validated['category_id'])) {
             $updates['category_id'] = (int) $validated['category_id'];
         } elseif ($request->filled('category')) {
@@ -184,42 +189,35 @@ class ProductController extends Controller
 
             if (is_numeric($raw)) {
                 $candidateId = (int) $raw;
-                $exists = ProductCategory::where('id', $candidateId)->exists();
-                if (!$exists) {
+                if (!ProductCategory::where('id', $candidateId)->exists()) {
                     return response()->json([
                         'message' => 'Invalid category id',
-                        'errors' => [
-                            'category' => ['The selected category does not exist.'],
-                        ],
+                        'errors'  => ['category' => ['The selected category does not exist.']],
                     ], 422);
                 }
-
                 $updates['category_id'] = $candidateId;
             } else {
                 $name = trim((string) $raw);
                 if ($name !== '') {
                     $slug = Str::slug($name);
-                    $cat = ProductCategory::where('slug', $slug)->first();
-
+                    $cat  = ProductCategory::where('slug', $slug)->first();
                     if (!$cat) {
                         $cat = ProductCategory::create([
-                            'name' => $name,
-                            'slug' => $this->uniqueCategorySlug($slug),
+                            'name'    => $name,
+                            'slug'    => $this->uniqueCategorySlug($slug),
                             'user_id' => $request->user()->id,
                         ]);
                     }
-
                     $updates['category_id'] = $cat->id;
                 }
             }
         }
 
         // Image update
-        if ($request->hasFile('image')) {
+        if ($request->hasFile('image') && $request->file('image')->isValid()) {
             if (!empty($product->image_url) && Storage::disk('public')->exists($product->image_url)) {
                 Storage::disk('public')->delete($product->image_url);
             }
-
             $updates['image_url'] = $request->file('image')->store('products/images', 'public');
         }
 
@@ -227,8 +225,25 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => 'Product updated successfully',
-            'data' => $product,
+            'data'    => $product->fresh()->load('category:id,name,slug'),
         ]);
+    }
+
+    private function uniqueProductSlug(string $base, ?int $excludeId = null): string
+    {
+        $slug = $base;
+        $i    = 2;
+
+        while (
+            Product::where('slug', $slug)
+                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function destroy(Product $product)
@@ -300,19 +315,6 @@ class ProductController extends Controller
             'message' => 'Product restored',
             'data' => $product,
         ]);
-    }
-
-    private function uniqueProductSlug(string $base): string
-    {
-        $slug = $base;
-        $i = 2;
-
-        while (Product::where('slug', $slug)->exists()) {
-            $slug = $base . '-' . $i;
-            $i++;
-        }
-
-        return $slug;
     }
 
     private function uniqueCategorySlug(string $base): string
