@@ -160,6 +160,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/restore', [LayoutPresetController::class, 'restoreById']);
     });
 
+    // File Manager
+    Route::prefix('file-manager')->group(function () {
+        Route::get('initialize',         [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'initialize']);
+        Route::get('content',            [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'content']);
+        Route::get('tree',               [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'tree']);
+        Route::get('select-disk',        [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'selectDisk']);
+        Route::post('upload',            [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'upload']);
+        Route::post('create-directory',  [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'createDirectory']);
+        Route::post('rename',            [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'rename']);
+        Route::post('delete',            [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'delete']);
+        Route::post('paste',             [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'paste']);
+        Route::get('download',           [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'download']);
+        Route::get('thumbnails',         [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'thumbnails']);
+        Route::get('preview',            [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'preview']);
+        Route::get('url',                [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'url']);
+        Route::post('zip',               [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'zip']);
+        Route::post('unzip',             [\Alexusmai\LaravelFileManager\Controllers\FileManagerController::class, 'unzip']);
+    });
+
 });
 
 //public
