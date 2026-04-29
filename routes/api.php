@@ -11,7 +11,10 @@ use App\Http\Controllers\Api\OptionController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SalesTransactionController;
 use App\Http\Controllers\Api\ProductCategoryController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
@@ -107,6 +110,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/product-categories/restore', [ProductCategoryController::class, 'restore']);
     Route::post('/product-categories/{id}/restore', [ProductCategoryController::class, 'restoreById']);
 
+    Route::apiResource('coupons', CouponController::class);
+    Route::apiResource('sales-transactions', SalesTransactionController::class)
+        ->parameters(['sales-transactions' => 'salesTransaction']);
+
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::get('/products/{product}', [ProductController::class, 'show']);
@@ -116,6 +123,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     Route::post('/products/restore', [ProductController::class, 'restore']);
     Route::post('/products/{id}/restore', [ProductController::class, 'restoreById']);
+
+    // customers
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::post('/customers', [CustomerController::class, 'store']);
+    Route::get('/customers/{customer}', [CustomerController::class, 'show']);
+    Route::put('/customers/{customer}', [CustomerController::class, 'update']);
+    Route::patch('/customers/{customer}', [CustomerController::class, 'update']);
 
     // users
     Route::post('/users', [UserController::class, 'store']);

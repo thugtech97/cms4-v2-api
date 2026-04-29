@@ -56,6 +56,9 @@ class UserController extends Controller
         $perPage = $request->integer('per_page', 10);
 
         $users = User::with('roles')
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'customer');
+            })
             ->when($request->search, function ($q) use ($request) {
                 $q->where(function ($qq) use ($request) {
                     $qq->where('fname', 'like', "%{$request->search}%")

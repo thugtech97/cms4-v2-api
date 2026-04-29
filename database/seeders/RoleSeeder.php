@@ -69,5 +69,12 @@ class RoleSeeder extends Seeder
         ]);
 
         $user->syncPermissions([]);
+
+        $customer = Role::firstOrCreate(
+            ['name' => 'customer', 'guard_name' => 'sanctum'],
+            ['description' => 'Customer']
+        );
+
+        $customer->syncPermissions([]);
     }
 }
