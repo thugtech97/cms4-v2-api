@@ -59,12 +59,37 @@ class UserController extends Controller
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'customer');
             })
-            ->when($request->search, function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where(function ($qq) use ($request) {
                     $qq->where('fname', 'like', "%{$request->search}%")
                        ->orWhere('lname', 'like', "%{$request->search}%")
                        ->orWhere('email', 'like', "%{$request->search}%");
                 });
+            })
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $term = $request->input('name');
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('fname', 'like', "%{$term}%")
+                       ->orWhere('mname', 'like', "%{$term}%")
+                       ->orWhere('lname', 'like', "%{$term}%");
+                });
+            })
+            ->when($request->filled('email'), function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->input('email') . '%');
+            })
+            ->when($request->filled('role'), function ($q) use ($request) {
+                $role = $request->input('role');
+                $q->whereHas('roles', function ($roleQuery) use ($role) {
+                    $roleQuery->where('name', 'like', '%' . $role . '%');
+                });
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $status = strtolower($request->input('status'));
+                if ($status === 'active') {
+                    $q->where('is_active', true);
+                } elseif ($status === 'inactive') {
+                    $q->where('is_active', false);
+                }
             })
             ->latest()
             ->paginate($perPage);

@@ -17,6 +17,18 @@ class RoleController extends Controller
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('description', 'like', "%{$search}%");
             })
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('name') . '%');
+            })
+            ->when($request->filled('description'), function ($q) use ($request) {
+                $q->where('description', 'like', '%' . $request->input('description') . '%');
+            })
+            ->when($request->filled('updated_from'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '>=', $request->input('updated_from'));
+            })
+            ->when($request->filled('updated_to'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '<=', $request->input('updated_to'));
+            })
             ->orderBy('name')
             ->paginate($request->get('per_page', 10));
 

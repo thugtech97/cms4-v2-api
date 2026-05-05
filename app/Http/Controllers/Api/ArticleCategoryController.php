@@ -29,8 +29,17 @@ class ArticleCategoryController extends Controller
         }
 
         $categories = $query->withCount('articles')
-            ->when($request->search, function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%");
+            })
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('name') . '%');
+            })
+            ->when($request->filled('slug'), function ($q) use ($request) {
+                $q->where('slug', 'like', '%' . $request->input('slug') . '%');
+            })
+            ->when($request->filled('articles_count'), function ($q) use ($request) {
+                $q->having('articles_count', '=', (int) $request->input('articles_count'));
             })
             ->latest()
             ->paginate($request->integer('per_page', 10));

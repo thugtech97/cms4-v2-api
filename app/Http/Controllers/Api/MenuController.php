@@ -30,8 +30,25 @@ class MenuController extends Controller
             $query = $query->withTrashed();
         }
 
-        $query->when($request->search, function ($q) use ($request) {
+        $query->when($request->filled('search'), function ($q) use ($request) {
             $q->where('name', 'like', '%' . $request->search . '%');
+        });
+        $query->when($request->filled('name'), function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->input('name') . '%');
+        });
+        $query->when($request->filled('status'), function ($q) use ($request) {
+            $status = strtolower($request->input('status'));
+            if ($status === 'active') {
+                $q->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $q->where('is_active', false);
+            }
+        });
+        $query->when($request->filled('date_modified_from'), function ($q) use ($request) {
+            $q->whereDate('updated_at', '>=', $request->input('date_modified_from'));
+        });
+        $query->when($request->filled('date_modified_to'), function ($q) use ($request) {
+            $q->whereDate('updated_at', '<=', $request->input('date_modified_to'));
         });
 
         $menus = $query->latest()->paginate($perPage);

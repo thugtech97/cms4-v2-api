@@ -40,8 +40,8 @@ class ArticleController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        if ($request->filled('status') || $request->filled('visibility')) {
+            $query->where('status', $request->input('status', $request->input('visibility')));
         }
 
         if ($request->filled('is_featured')) {
@@ -56,7 +56,35 @@ class ArticleController extends Controller
             $query->whereDate('date', '<=', $request->input('date_to'));
         }
 
-        $query->when($request->search, function ($q) use ($request) {
+        if ($request->filled('type')) {
+            $type = strtolower($request->input('type'));
+            if ($type === 'featured') {
+                $query->where('is_featured', true);
+            } elseif ($type === 'regular') {
+                $query->where('is_featured', false);
+            }
+        }
+
+        if ($request->filled('updated_from')) {
+            $query->whereDate('updated_at', '>=', $request->input('updated_from'));
+        }
+
+        if ($request->filled('updated_to')) {
+            $query->whereDate('updated_at', '<=', $request->input('updated_to'));
+        }
+
+        if ($request->filled('title')) {
+            $query->where('name', 'like', '%' . $request->input('title') . '%');
+        }
+
+        if ($request->filled('category')) {
+            $term = $request->input('category');
+            $query->whereHas('category', function ($categoryQuery) use ($term) {
+                $categoryQuery->where('name', 'like', '%' . $term . '%');
+            });
+        }
+
+        $query->when($request->filled('search'), function ($q) use ($request) {
             $q->where('name', 'like', '%' . $request->search . '%');
         });
 

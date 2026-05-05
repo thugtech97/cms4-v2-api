@@ -36,12 +36,25 @@ class ProductController extends Controller
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->input('category_id'));
         }
+        if ($request->filled('category')) {
+            $term = $request->input('category');
+            $query->whereHas('category', function ($categoryQuery) use ($term) {
+                $categoryQuery->where('name', 'like', '%' . $term . '%')
+                    ->orWhere('slug', 'like', '%' . $term . '%');
+            });
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->input('name') . '%');
+        }
+        if ($request->filled('price')) {
+            $query->where('price', (float) $request->input('price'));
+        }
 
-        $query->when($request->search, function ($q) use ($request) {
+        $query->when($request->filled('search'), function ($q) use ($request) {
             $term = $request->search;
             $q->where(function ($qq) use ($term) {
                 $qq->where('name', 'like', '%' . $term . '%')

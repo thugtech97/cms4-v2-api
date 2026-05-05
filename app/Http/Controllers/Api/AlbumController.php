@@ -20,8 +20,20 @@ class AlbumController extends Controller
         $albums = Album::query()
             ->where('id', '!=', 1) // 🚫 exclude Home Banner
             ->withCount('banners')
-            ->when($request->search, function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('name') . '%');
+            })
+            ->when($request->filled('total_images'), function ($q) use ($request) {
+                $q->having('banners_count', '=', (int) $request->input('total_images'));
+            })
+            ->when($request->filled('date_updated_from'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '>=', $request->input('date_updated_from'));
+            })
+            ->when($request->filled('date_updated_to'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '<=', $request->input('date_updated_to'));
             })
             ->latest()
             ->paginate($perPage);

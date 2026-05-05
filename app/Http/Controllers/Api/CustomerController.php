@@ -30,14 +30,25 @@ class CustomerController extends Controller
 
         $customers = User::with('roles')
             ->role(self::ROLE)
-            ->when($request->search, function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where(function ($qq) use ($request) {
                     $qq->where('fname', 'like', "%{$request->search}%")
                        ->orWhere('lname', 'like', "%{$request->search}%")
                        ->orWhere('email', 'like', "%{$request->search}%");
                 });
             })
-            ->when($request->status, function ($q) use ($request) {
+            ->when($request->filled('name'), function ($q) use ($request) {
+                $term = $request->input('name');
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('fname', 'like', "%{$term}%")
+                       ->orWhere('mname', 'like', "%{$term}%")
+                       ->orWhere('lname', 'like', "%{$term}%");
+                });
+            })
+            ->when($request->filled('email'), function ($q) use ($request) {
+                $q->where('email', 'like', '%' . $request->input('email') . '%');
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
                 $isActive = strtolower((string) $request->status) === 'active';
                 $q->where('is_active', $isActive);
             })

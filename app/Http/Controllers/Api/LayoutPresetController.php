@@ -22,6 +22,20 @@ class LayoutPresetController extends Controller
                 ->orWhere('category', 'like', "%{$search}%");
             });
         }
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->input('name') . '%');
+        }
+        if ($request->filled('category')) {
+            $query->where('category', 'like', '%' . $request->input('category') . '%');
+        }
+        if ($request->filled('status')) {
+            $status = strtolower($request->input('status'));
+            if ($status === 'active') {
+                $query->where('is_active', true);
+            } elseif ($status === 'inactive') {
+                $query->where('is_active', false);
+            }
+        }
 
         $query->orderByDesc('created_at');
 

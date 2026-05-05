@@ -90,8 +90,8 @@ class PageController extends Controller
         }
 
         $pages = $query
-            ->when($request->search, function ($q) use ($request) {
-                $term = $request->search;
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $term = $request->input('search');
                 $q->where(function ($qq) use ($term) {
                     $qq->where('name', 'like', '%' . $term . '%')
                         ->orWhere('label', 'like', '%' . $term . '%')
@@ -101,6 +101,60 @@ class PageController extends Controller
                         ->orWhere('meta_description', 'like', '%' . $term . '%')
                         ->orWhere('meta_keyword', 'like', '%' . $term . '%');
                 });
+            })
+            ->when($request->filled('title'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->input('title') . '%');
+            })
+            ->when($request->filled('label'), function ($q) use ($request) {
+                $q->where('label', 'like', '%' . $request->input('label') . '%');
+            })
+            ->when($request->filled('content'), function ($q) use ($request) {
+                $term = $request->input('content');
+                $q->where(function ($qq) use ($term) {
+                    $qq->where('contents', 'like', '%' . $term . '%')
+                        ->orWhere('grapes_html', 'like', '%' . $term . '%')
+                        ->orWhere('grapes_css', 'like', '%' . $term . '%')
+                        ->orWhere('grapes_js', 'like', '%' . $term . '%');
+                });
+            })
+            ->when($request->filled('album'), function ($q) use ($request) {
+                $term = $request->input('album');
+                $q->where(function ($qq) use ($term) {
+                    if (is_numeric($term)) {
+                        $qq->where('album_id', (int) $term);
+                    }
+
+                    $qq->orWhereHas('album', function ($albumQuery) use ($term) {
+                        $albumQuery->where('name', 'like', '%' . $term . '%');
+                    });
+                });
+            })
+            ->when($request->filled('last_modified_by'), function ($q) use ($request) {
+                $term = $request->input('last_modified_by');
+                $q->whereHas('user', function ($userQuery) use ($term) {
+                    $userQuery->where('fname', 'like', '%' . $term . '%')
+                        ->orWhere('mname', 'like', '%' . $term . '%')
+                        ->orWhere('lname', 'like', '%' . $term . '%')
+                        ->orWhere('email', 'like', '%' . $term . '%');
+                });
+            })
+            ->when($request->filled('visibility'), function ($q) use ($request) {
+                $q->where('status', strtolower($request->input('visibility')));
+            })
+            ->when($request->filled('seo_title'), function ($q) use ($request) {
+                $q->where('meta_title', 'like', '%' . $request->input('seo_title') . '%');
+            })
+            ->when($request->filled('seo_description'), function ($q) use ($request) {
+                $q->where('meta_description', 'like', '%' . $request->input('seo_description') . '%');
+            })
+            ->when($request->filled('seo_keyword'), function ($q) use ($request) {
+                $q->where('meta_keyword', 'like', '%' . $request->input('seo_keyword') . '%');
+            })
+            ->when($request->filled('date_modified_from'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '>=', $request->input('date_modified_from'));
+            })
+            ->when($request->filled('date_modified_to'), function ($q) use ($request) {
+                $q->whereDate('updated_at', '<=', $request->input('date_modified_to'));
             })
             ->latest('updated_at')
             ->paginate($perPage);
