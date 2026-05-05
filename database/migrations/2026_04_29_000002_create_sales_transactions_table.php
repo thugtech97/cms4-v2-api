@@ -9,25 +9,52 @@ return new class extends Migration {
     {
         Schema::create('sales_transactions', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('transaction_no')->unique();
-            $table->unsignedBigInteger('customer_id')->nullable()->index();
-            $table->string('customer_name')->nullable();
-            $table->string('customer_email')->nullable();
+
+            // Transaction reference (short + unique)
+            $table->string('transaction_no', 50)->unique();
+
+            // Customer info
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->string('customer_name', 120)->nullable();
+            $table->string('customer_email', 150)->nullable();
+
+            // Financials
             $table->decimal('subtotal', 12, 2)->default(0);
             $table->decimal('discount_total', 12, 2)->default(0);
             $table->decimal('tax_total', 12, 2)->default(0);
             $table->decimal('shipping_total', 12, 2)->default(0);
             $table->decimal('grand_total', 12, 2)->default(0);
-            $table->string('payment_status')->default('pending');
-            $table->string('order_status')->default('pending');
+
+            // Status fields (short + indexed)
+            $table->string('payment_status', 20)->default('pending')->index();
+            $table->string('order_status', 20)->default('pending')->index();
+
+            // Notes
             $table->text('notes')->nullable();
-            $table->timestamp('transacted_at')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable()->index();
+
+            // Transaction date
+            $table->timestamp('transacted_at')->nullable()->index();
+
+            // User (who processed)
+            $table->unsignedBigInteger('user_id')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('customer_id')->references('id')->on('users')->nullOnDelete();
-            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
+            // Indexes
+            $table->index('customer_id');
+            $table->index('user_id');
+
+            // Foreign keys
+            $table->foreign('customer_id')
+                  ->references('id')
+                  ->on('users')
+                  ->nullOnDelete();
+
+            $table->foreign('user_id')
+                  ->references('id')
+                  ->on('users')
+                  ->nullOnDelete();
         });
     }
 
