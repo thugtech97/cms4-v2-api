@@ -48,6 +48,12 @@ class CustomerController extends Controller
             ->when($request->filled('email'), function ($q) use ($request) {
                 $q->where('email', 'like', '%' . $request->input('email') . '%');
             })
+            ->when($request->filled('date_registered_from'), function ($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->input('date_registered_from'));
+            })
+            ->when($request->filled('date_registered_to'), function ($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->input('date_registered_to'));
+            })
             ->when($request->filled('status'), function ($q) use ($request) {
                 $isActive = strtolower((string) $request->status) === 'active';
                 $q->where('is_active', $isActive);
