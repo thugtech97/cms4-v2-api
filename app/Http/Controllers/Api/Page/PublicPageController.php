@@ -78,6 +78,10 @@ class PublicPageController extends Controller
                 'transition_in_value'  => $transitionInValue,
                 'transition_out_value' => $transitionOutValue,
                 'banners' => $page->album->banners->map(function ($banner) {
+                    $mediaType = preg_match('/\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i', (string) $banner->image_path)
+                        ? 'video'
+                        : 'image';
+
                     return [
                         'id'          => $banner->id,
                         'title'       => $banner->title,
@@ -90,6 +94,7 @@ class PublicPageController extends Controller
                         'description_bold' => $banner->description_bold ?? null,
                         'alt'         => $banner->alt,
                         'image_url' => url(Storage::url($banner->image_path)),
+                        'media_type' => $mediaType,
                         'button_text' => $banner->button_text,
                         'button_font' => $banner->button_font ?? null,
                         'button_font_size' => $banner->button_font_size ?? null,
