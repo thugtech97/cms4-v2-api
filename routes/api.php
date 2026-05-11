@@ -15,8 +15,10 @@ use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\JobOrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SalesTransactionController;
 use App\Http\Controllers\Api\ProductCategoryController;
+use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Page\PageController;
@@ -82,13 +84,17 @@ Route::middleware('auth:sanctum')->group(function () {
             return app(ProductCategoryController::class)->index($request);
         }
 
+        if ($type === 'service') {
+            return app(ServiceCategoryController::class)->index($request);
+        }
+
         if ($type === 'article') {
             return app(ArticleCategoryController::class)->index($request);
         }
 
         return response()->json([
             'message' => 'Unknown category type',
-            'allowed' => ['product', 'article'],
+            'allowed' => ['product', 'service', 'article'],
         ], 404);
     });
 
@@ -129,6 +135,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{product}', [ProductController::class, 'destroy']);
     Route::post('/products/restore', [ProductController::class, 'restore']);
     Route::post('/products/{id}/restore', [ProductController::class, 'restoreById']);
+
+    // services
+    Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
+    Route::get('/fetch-service-categories', [ServiceCategoryController::class, 'index']);
+    Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
+    Route::get('/service-categories/{category}', [ServiceCategoryController::class, 'show']);
+    Route::put('/service-categories/{category}', [ServiceCategoryController::class, 'update']);
+    Route::patch('/service-categories/{category}', [ServiceCategoryController::class, 'update']);
+    Route::post('/service-categories/{category}', [ServiceCategoryController::class, 'handlePostAction']);
+    Route::delete('/service-categories/{category}', [ServiceCategoryController::class, 'destroy']);
+
+    Route::get('/services', [ServiceController::class, 'index']);
+    Route::post('/services', [ServiceController::class, 'store']);
+    Route::post('/services/bulk-delete', [ServiceController::class, 'bulkDelete']);
+    Route::post('/services/bulk-status', [ServiceController::class, 'bulkStatus']);
+    Route::get('/services/{service}', [ServiceController::class, 'show']);
+    Route::put('/services/{service}', [ServiceController::class, 'update']);
+    Route::patch('/services/{service}', [ServiceController::class, 'update']);
+    Route::post('/services/{service}', [ServiceController::class, 'handlePostAction']);
+    Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+    Route::post('/services/{id}/restore', [ServiceController::class, 'restoreById']);
 
     // customers
     Route::get('/customers', [CustomerController::class, 'index']);
