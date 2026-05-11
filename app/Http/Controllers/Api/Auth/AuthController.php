@@ -29,6 +29,15 @@ class AuthController extends Controller
         }
 
         $user = auth()->user();
+
+        if ($user->hasRole(self::CUSTOMER_ROLE)) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => ['Customer accounts cannot log in to the admin portal. Please use the customer login page.'],
+            ]);
+        }
+
         //$user->tokens()->delete();
 
         $token = $user->createToken('cms-admin')->plainTextToken;
