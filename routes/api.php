@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\JobOrderController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SalesTransactionController;
 use App\Http\Controllers\Api\ProductCategoryController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\Api\PermissionMatrixController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register-customer', [AuthController::class, 'registerCustomer']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AccountController::class, 'me']);
     Route::post('/user/profile', [AccountController::class, 'updateProfile']);
@@ -50,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // albums
     Route::apiResource('albums', AlbumController::class);
+    Route::post('/albums/restore', [AlbumController::class, 'restore']);
+    Route::post('/albums/{id}/restore', [AlbumController::class, 'restoreById']);
 
     // fetch animations
     Route::get('/options', [OptionController::class, 'index']);
@@ -113,6 +117,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('coupons', CouponController::class);
     Route::apiResource('sales-transactions', SalesTransactionController::class)
         ->parameters(['sales-transactions' => 'salesTransaction']);
+    Route::apiResource('job-orders', JobOrderController::class)
+        ->parameters(['job-orders' => 'jobOrder']);
 
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
@@ -196,6 +202,10 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 //public
+Route::get('/public-products', [ProductController::class, 'index']);
+Route::get('/public/products', [ProductController::class, 'index']);
+Route::get('/public-product-categories', [ProductCategoryController::class, 'index']);
+Route::get('/public/product-categories', [ProductCategoryController::class, 'index']);
 Route::get('/public/pages/{slug}', [PublicPageController::class, 'show']);
 Route::get('/public/menus/active', [PublicPageController::class, 'active']);
 Route::get('/public/footer', [PublicPageController::class, 'footer']);

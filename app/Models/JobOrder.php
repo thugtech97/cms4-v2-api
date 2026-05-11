@@ -7,34 +7,42 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class SalesTransaction extends Model implements AuditableContract
+class JobOrder extends Model implements AuditableContract
 {
     use SoftDeletes, Auditable;
 
     protected $fillable = [
-        'transaction_no',
+        'jo_no',
         'customer_id',
+        'customer_type',
         'customer_name',
         'customer_email',
+        'customer_contact',
+        'source',
+        'category',
+        'status',
+        'order_date',
+        'date_needed',
+        'delivery_type',
+        'delivery_location',
+        'delivery_address',
+        'delivery_charge',
         'subtotal',
         'discount_total',
-        'tax_total',
-        'shipping_total',
-        'grand_total',
-        'payment_status',
-        'order_status',
-        'notes',
-        'transacted_at',
+        'total',
+        'total_quantity',
+        'remarks',
         'user_id',
     ];
 
     protected $casts = [
+        'order_date' => 'datetime',
+        'date_needed' => 'datetime',
+        'delivery_charge' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount_total' => 'decimal:2',
-        'tax_total' => 'decimal:2',
-        'shipping_total' => 'decimal:2',
-        'grand_total' => 'decimal:2',
-        'transacted_at' => 'datetime',
+        'total' => 'decimal:2',
+        'total_quantity' => 'integer',
     ];
 
     public function customer()
@@ -49,6 +57,11 @@ class SalesTransaction extends Model implements AuditableContract
 
     public function items()
     {
-        return $this->hasMany(SalesTransactionItem::class);
+        return $this->hasMany(JobOrderItem::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(JobOrderPayment::class);
     }
 }

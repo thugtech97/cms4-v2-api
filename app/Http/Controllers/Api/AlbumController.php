@@ -178,4 +178,50 @@ class AlbumController extends Controller
             return response()->json(null, 204);
         });
     }
+
+    public function restore(Request $request)
+    {
+        $ids = $request->input('ids') ?? $request->input('id');
+
+        if (is_null($ids)) {
+            return response()->json(['message' => 'No id(s) provided'], 422);
+        }
+
+        $ids = is_array($ids) ? $ids : [$ids];
+
+        $albums = Album::withTrashed()
+            ->whereIn('id', $ids)
+            ->where('id', '!=', 1)
+            ->get();
+        $restored = 0;
+
+        foreach ($albums as $album) {
+            if ($album->trashed()) {
+                $album->restore();
+                $restored++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Albums restored',
+            'restored_count' => $restored,
+        ]);
+    }
+
+    public function restoreById($id)
+    {
+        if ((int) $id === 1) {
+            return response()->json(['message' => 'Home Banner cannot be restored here'], 422);
+        }
+
+        $album = Album::withTrashed()->findOrFail($id);
+
+        if (! $album->trashed()) {
+            return response()->json(['message' => 'Album is not deleted'], 422);
+        }
+
+        $album->restore();
+
+        return response()->json(['message' => 'Album restored', 'id' => $album->id]);
+    }
 }

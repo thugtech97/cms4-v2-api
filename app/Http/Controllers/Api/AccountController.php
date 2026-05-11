@@ -28,6 +28,13 @@ class AccountController extends Controller
         $request->validate([
             'fname'  => 'required|string|max:255',
             'lname'  => 'required|string|max:255',
+            'mobile' => 'nullable|string|max:60',
+            'birth_date' => 'nullable|date',
+            'address_street' => 'nullable|string|max:255',
+            'address_city' => 'nullable|string|max:120',
+            'address_municipality' => 'nullable|string|max:120',
+            'address_province' => 'nullable|string|max:120',
+            'address_zip' => 'nullable|string|max:30',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:1024',
         ]);
 
@@ -47,6 +54,13 @@ class AccountController extends Controller
 
         $user->fname = $request->fname;
         $user->lname = $request->lname;
+        $user->mobile = $request->mobile;
+        $user->birth_date = $request->birth_date;
+        $user->address_street = $request->address_street;
+        $user->address_city = $request->address_city;
+        $user->address_municipality = $request->address_municipality;
+        $user->address_province = $request->address_province;
+        $user->address_zip = $request->address_zip;
         $user->save();
 
         return response()->json([
