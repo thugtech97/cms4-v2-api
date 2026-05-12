@@ -32,6 +32,7 @@ use App\Http\Controllers\Api\PermissionMatrixController;
 
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/customer-login', [AuthController::class, 'customerLogin']);
 Route::post('/register-customer', [AuthController::class, 'registerCustomer']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AccountController::class, 'me']);
